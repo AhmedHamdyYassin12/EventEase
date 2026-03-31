@@ -1,0 +1,36 @@
+@* Components/AttendanceTracker.razor *@
+@using EventEase.Models
+
+<div class="attendance-tracker">
+    <h3>Session Attendance</h3>
+
+    @if (!RegisteredEventIds.Any())
+    {
+        <p class="empty-state">You haven't registered for any events yet.</p>
+    }
+    else
+    {
+        <p>You're registered for <strong>@RegisteredEventIds.Count</strong> event(s):</p>
+        <ul>
+            @foreach (var id in RegisteredEventIds)
+            {
+                @* Look up the event name from the ID *@
+                var ev = AllEvents.FirstOrDefault(e => e.Id == id);
+                if (ev != null)
+                {
+                    <li>✅ @ev.Name</li>
+                }
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    // List of all events (needed to look up names from IDs)
+    [Parameter]
+    public List<Event> AllEvents { get; set; } = new();
+
+    // IDs the user has registered for (comes from SessionService)
+    [Parameter]
+    public List<int> RegisteredEventIds { get; set; } = new();
+}

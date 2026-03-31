@@ -1,0 +1,16 @@
+@* Shared/MainLayout.razor — Wraps every page with nav + footer *@
+@using EventEase.Components.Layout
+@inherits LayoutComponentBase
+@* Must inherit this for layouts *@
+
+<NavMenu />
+@* Render the nav bar at the top *@
+
+<main class="main-content">
+@* The current page's content goes here *@
+    @Body
+</main>
+
+<footer class="footer">
+    <p>© 2025 EventEase. All rights reserved.</p>
+</footer>

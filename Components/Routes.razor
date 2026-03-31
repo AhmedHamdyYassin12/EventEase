@@ -1,0 +1,28 @@
+﻿@using EventEase.Components.Pages
+
+@* <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router> *@
+
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        @* RouteView renders the component that matches the current URL *@
+        @* DefaultLayout wraps every page in MainLayout *@
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+
+        @* FocusOnNavigate improves accessibility by moving focus on page change *@
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+
+    <NotFound>
+        @* When no route matches, show our custom 404 page *@
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <NotFound />
+        </LayoutView>
+    </NotFound>
+</Router>

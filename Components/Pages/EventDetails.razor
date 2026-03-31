@@ -1,0 +1,123 @@
+@* Pages/EventDetails.razor — Updated to use SessionService *@
+@page "/event/{Id:int}"
+
+@using EventEase.Models
+@inject EventEase.Services.EventService EventService
+@inject EventEase.Services.SessionService SessionService
+
+@if (_event == null)
+{
+    <div class="not-found">
+        <h2>Event not found</h2>
+        <a href="/" class="btn btn--secondary">← Back to Events</a>
+    </div>
+}
+else
+{
+    <div class="event-details">
+        <a href="/" class="back-link">← All Events</a>
+        <h1>@_event.Name</h1>
+
+        <div class="event-details__meta">
+            <span>📅 @_event.Date.ToString("dddd, MMMM dd, yyyy")</span>
+            <span>📍 @_event.Location</span>
+        </div>
+
+        <p class="event-details__description">@_event.Description</p>
+
+        <div class="event-details__capacity">
+            <strong>Capacity:</strong> @_event.RegisteredCount / @_event.Capacity registered
+        </div>
+
+        @* Three different states: already registered, full, or available *@
+        @if (SessionService.IsRegisteredFor(_event.Id))
+        {
+            <div class="alert alert--success">✅ You're registered for this event!</div>
+        }
+        else if (!_event.HasAvailability)
+        {
+            <button class="btn btn--disabled" disabled>Fully Booked</button>
+        }
+        else
+        {
+            <a href="/register/@_event.Id" class="btn btn--primary">Register Now</a>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Event? _event;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _event = await Task.FromResult(EventService.GetEventById(Id));
+    }
+}
+
+@* Old Version *@
+
+@* * Pages/EventDetails.razor *
+page "/event/{Id:int}"   
+* Matches URLs like /event/1, /event/2, etc. *
+
+using EventEase.Models
+inject EventEase.Services.EventService EventService
+inject NavigationManager NavManager  
+* For navigating programmatically *
+
+if (_event == null)
+{
+    * Show this if the event ID doesn't exist *
+    <div class="not-found">
+        <h2>Event not found</h2>
+        <p>The event you're looking for doesn't exist.</p>
+        <a href="/" class="btn btn--secondary">← Back to Events</a>
+    </div>
+}
+else
+{
+    <div class="event-details">
+        <a href="/" class="back-link">← All Events</a>
+
+        <h1>_event.Name</h1>
+
+        <div class="event-details__meta">
+            <span>📅 _event.Date.ToString("dddd, MMMM dd, yyyy")</span>
+            <span>📍 _event.Location</span>
+        </div>
+
+        <p class="event-details__description">_event.Description</p>
+
+        <div class="event-details__capacity">
+            <strong>Capacity:</strong> _event.RegisteredCount / _event.Capacity registered
+        </div>
+
+        * Only show the Register button if there's space *
+        if (_event.HasAvailability)
+        {
+            <a href="/register/_event.Id" class="btn btn--primary">Register Now</a>
+        }
+        else
+        {
+            <button class="btn btn--disabled" disabled>Fully Booked</button>
+        }
+    </div>
+}
+
+code {
+    // [Parameter] here comes from the URL route, not a parent component
+    // Blazor automatically fills this from the URL segment {Id:int}
+    [Parameter]
+    public int Id { get; set; }
+
+    private Event? _event;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Look up the event by the ID from the URL
+        _event = await Task.FromResult(EventService.GetEventById(Id));
+    }
+} *@
