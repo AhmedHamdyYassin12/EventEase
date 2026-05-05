@@ -1,0 +1,111 @@
+@* Components/EventCard.razor — Updated with null safety *@
+@using EventEase.Models
+
+@* Wrap the whole card in an ErrorBoundary.
+   If anything inside crashes, the <ErrorContent> block shows instead. *@
+<ErrorBoundary>
+    <ChildContent>
+        @* Null check — if CurrentEvent somehow wasn't passed in, show a fallback *@
+        @if (CurrentEvent == null)
+        {
+            <div class="event-card event-card--error">
+                <p>Event data unavailable.</p>
+            </div>
+        }
+        else
+        {
+            <div class="event-card @(CurrentEvent.HasAvailability ? "" : "event-card--full")">
+                <h3 class="event-card__title">
+                    @* Null-coalescing: if Name is empty, show a fallback string *@
+                    @(!string.IsNullOrEmpty(CurrentEvent.Name) ? CurrentEvent.Name : "Unnamed Event")
+                </h3>
+
+                <p class="event-card__date">
+                    📅 @CurrentEvent.Date.ToString("MMMM dd, yyyy")
+                </p>
+
+                <p class="event-card__location">
+                    📍 @(!string.IsNullOrEmpty(CurrentEvent.Location) ? CurrentEvent.Location : "Location TBD")
+                </p>
+
+                @if (CurrentEvent.HasAvailability)
+                {
+                    <span class="badge badge--available">
+                        @CurrentEvent.RegisteredCount / @CurrentEvent.Capacity spots filled
+                    </span>
+                }
+                else
+                {
+                    <span class="badge badge--full">FULLY BOOKED</span>
+                }
+
+                <a href="/event/@CurrentEvent.Id" class="btn btn--primary">View Details</a>
+            </div>
+        }
+    </ChildContent>
+
+    <ErrorContent Context="ex">
+        @* This block renders if an exception is thrown inside ChildContent *@
+        <div class="event-card event-card--error">
+            <p>⚠️ Failed to display this event.</p>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    [Parameter]
+    public Event? CurrentEvent { get; set; }   // Note: now nullable with "?"
+}
+
+@* Old Version *@
+@* * Components/EventCard.razor *
+
+* We import the Models namespace so we can use the Event type *
+using EventEase.Models
+
+* ───────────────────────────────────────────
+   HTML SECTION — Defines the visual structure
+   ─────────────────────────────────────────── *
+
+<div class="event-card (CurrentEvent.HasAvailability ? "" : "event-card--full")">
+
+    * Event name as a heading *
+    <h3 class="event-card__title">CurrentEvent.Name</h3>
+
+    * 📅 Date — formatted nicely with C# string formatting *
+    <p class="event-card__date">
+        📅 CurrentEvent.Date.ToString("MMMM dd, yyyy")
+    </p>
+
+    * 📍 Location *
+    <p class="event-card__location">
+        📍 CurrentEvent.Location
+    </p>
+
+    * Availability badge — conditional rendering with if *
+    if (CurrentEvent.HasAvailability)
+    {
+        <span class="badge badge--available">
+            CurrentEvent.RegisteredCount / CurrentEvent.Capacity spots filled
+        </span>
+    }
+    else
+    {
+        <span class="badge badge--full">FULLY BOOKED</span>
+    }
+
+    * NavigationLink — routes to the details page for this specific event *
+    * The href uses the event's Id to build the URL, e.g., /event/1 *
+    <a href="/event/CurrentEvent.Id" class="btn btn--primary">View Details</a>
+</div>
+
+* ───────────────────────────────────────────
+   CODE SECTION — C# logic for this component
+   ─────────────────────────────────────────── *
+code {
+    // [Parameter] means this value is PASSED IN from a parent component.
+    // The parent writes: <EventCard CurrentEvent="someEvent" />
+    // Without [Parameter], the parent can't set this property.
+    [Parameter]
+    public Event CurrentEvent { get; set; } = new Event();
+} *@

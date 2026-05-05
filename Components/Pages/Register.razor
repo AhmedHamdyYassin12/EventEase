@@ -1,0 +1,128 @@
+@* Pages/Register.razor *@
+@page "/register/{EventId:int}"
+
+@using EventEase.Models
+@inject EventEase.Services.EventService EventService
+@inject EventEase.Services.SessionService SessionService
+@inject NavigationManager NavManager
+
+@if (_event == null)
+{
+    <div class="not-found">
+        <h2>Event not found</h2>
+        <a href="/" class="btn btn--secondary">← Back</a>
+    </div>
+}
+else if (_registrationSuccess)
+{
+    @* ── SUCCESS STATE — shown after a valid form submission *@
+    <div class="success-card">
+        <h2>✅ Registration Confirmed!</h2>
+        <p>Thank you, <strong>@SessionService.CurrentUser?.FullName</strong>!</p>
+        <p>You're registered for <strong>@_event.Name</strong>.</p>
+        <p>A confirmation will be sent to <strong>@SessionService.CurrentUser?.Email</strong>.</p>
+        <a href="/" class="btn btn--primary">Browse More Events</a>
+    </div>
+}
+else
+{
+    <div class="register-page">
+        <h1>Register for @_event.Name</h1>
+        <p>📅 @_event.Date.ToString("MMMM dd, yyyy") — 📍 @_event.Location</p>
+
+        @* Check if the user already registered for this event (from session) *@
+        @if (SessionService.IsRegisteredFor(EventId))
+        {
+            <div class="alert alert--warning">
+                ⚠️ You've already registered for this event in this session.
+            </div>
+        }
+
+        @* EditForm — Blazor's form handler.
+           OnValidSubmit fires only if ALL validation passes. *@
+        <EditForm Model="@_registration" OnValidSubmit="HandleValidSubmit">
+
+            @* These two lines activate automatic validation from DataAnnotations *@
+            <DataAnnotationsValidator />
+            <ValidationSummary />   @* Shows all errors at the top of the form *@
+
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                @* InputText is Blazor's <input> that knows about validation state *@
+                <InputText id="fullName" @bind-Value="_registration.FullName" class="form-control" />
+                @* ValidationMessage shows the error for just this field *@
+                <ValidationMessage For="@(() => _registration.FullName)" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <InputText id="email" @bind-Value="_registration.Email" class="form-control" />
+                <ValidationMessage For="@(() => _registration.Email)" />
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <InputText id="phone" @bind-Value="_registration.Phone" class="form-control" />
+                <ValidationMessage For="@(() => _registration.Phone)" />
+            </div>
+
+            @* Show error from service (e.g., event became full between page load and submit) *@
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert--error">@_errorMessage</div>
+            }
+
+            <button type="submit" class="btn btn--primary" disabled="@_isSubmitting">
+                @(_isSubmitting ? "Registering..." : "Confirm Registration")
+            </button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int EventId { get; set; }
+
+    private Event? _event;
+    private Registration _registration = new();
+    private bool _registrationSuccess = false;
+    private bool _isSubmitting = false;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _event = await Task.FromResult(EventService.GetEventById(EventId));
+
+        // Pre-fill the EventId on the registration model
+        _registration.EventId = EventId;
+    }
+
+    // This method is called by EditForm only when ALL validation passes
+    private async Task HandleValidSubmit()
+    {
+        // Prevent double-submission (e.g., user clicks twice)
+        if (_isSubmitting) return;
+        _isSubmitting = true;
+        _errorMessage = string.Empty;
+
+        // Simulate async work (e.g., saving to a database)
+        await Task.Delay(500);
+
+        // Try to register — the service checks capacity
+        bool success = EventService.RegisterForEvent(EventId);
+
+        if (success)
+        {
+            // Save to session so other pages can see the user is registered
+            _registration.EventName = _event?.Name ?? string.Empty;
+            SessionService.SetUser(_registration);
+            _registrationSuccess = true;
+        }
+        else
+        {
+            _errorMessage = "Sorry, this event is now fully booked.";
+        }
+
+        _isSubmitting = false;
+    }
+}

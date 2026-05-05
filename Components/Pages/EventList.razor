@@ -1,0 +1,49 @@
+@* Pages/EventList.razor *@
+@page "/"  
+@* This page is the homepage, accessible at "/" *@
+
+@using EventEase.Models
+@using EventEase.Components
+
+@* Inject our EventService — Blazor will provide the instance automatically *@
+@inject EventEase.Services.EventService EventService
+
+<h1>Upcoming Events</h1>
+<p>Browse our upcoming events and register for the ones you're interested in.</p>
+
+@* ── LOADING STATE ──
+   @if checks a boolean. While events are loading (in a real app), show a spinner. *@
+@if (_events == null)
+{
+    <p>Loading events...</p>
+}
+else if (!_events.Any())
+{
+    <p>No events found.</p>
+}
+else
+{
+    @* Loop through each event and render an EventCard component *@
+    <div class="event-grid">
+        @foreach (var ev in _events)
+        {
+            @* Pass the event object into the EventCard via the [Parameter] we defined *@
+            <EventCard CurrentEvent="ev" />
+        }
+    </div>
+}
+
+@code {
+    // Private field to hold the list of events
+    // The "?" means it can be null initially (before data is loaded)
+    private List<Event>? _events;
+
+    // OnInitializedAsync runs when the component first loads
+    // This is a Blazor lifecycle method — think of it as "on page load"
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real app, you'd await an HTTP call here.
+        // We use Task.FromResult to simulate async behavior with mock data.
+        _events = await Task.FromResult(EventService.GetAllEvents());
+    }
+}
